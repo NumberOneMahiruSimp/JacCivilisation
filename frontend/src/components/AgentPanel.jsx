@@ -1,4 +1,12 @@
-import { Brain, HeartPulse, ScrollText, Shield, Users } from "lucide-react";
+import { ScrollText, Users } from "lucide-react";
+
+const leaderPortraits = {
+  Solarians: "/assets/leader-blonde.png",
+  Elyrians: "/assets/leader-blonde.png",
+  Khepri: "/assets/leader-blonde.png",
+  Varku: "/assets/leader-boy.png",
+  Nomads: "/assets/leader-boy.png",
+};
 
 export function AgentPanel({ civilization, agents, allAgents, relationships }) {
   if (!civilization) return null;
@@ -11,23 +19,19 @@ export function AgentPanel({ civilization, agents, allAgents, relationships }) {
   return (
     <section className="intel-panel">
       <div className="intel-header" style={{ "--civ": civilization.color }}>
+        <div className="leader-frame">
+          <img src={leaderPortraits[civilization.name] ?? "/assets/leader-boy.png"} alt={`${civilization.name} leader`} />
+        </div>
         <div>
-          <span>Civilization Intelligence</span>
+          <span>Faction Council</span>
           <h2>{civilization.name}</h2>
           <p>{civilization.trait} / {civilization.doctrine}</p>
         </div>
         <strong>{civilization.current_strategy.replaceAll("_", " ")}</strong>
       </div>
 
-      <div className="civ-stat-grid">
-        <Stat icon={Users} label="Population" value={civilization.population} />
-        <Stat icon={Shield} label="Stability" value={`${civilization.stability}%`} />
-        <Stat icon={Brain} label="Tech" value={civilization.technology} />
-        <Stat icon={HeartPulse} label="Faith" value={civilization.faith} />
-      </div>
-
       <div className="intel-section">
-        <h3><ScrollText size={14} /> Personality Memory</h3>
+        <h3><ScrollText size={14} /> Memory</h3>
         <div className="memory-scroll">
           {(civilization.memories ?? []).length ? civilization.memories.slice(-5).reverse().map((memory) => (
             <article key={memory.id}>
@@ -39,7 +43,7 @@ export function AgentPanel({ civilization, agents, allAgents, relationships }) {
       </div>
 
       <div className="intel-section">
-        <h3><Users size={14} /> Active Units</h3>
+        <h3><Users size={14} /> People</h3>
         <div className="unit-list">
           {agents.map((agent) => (
             <div key={agent.id}>
@@ -61,15 +65,5 @@ export function AgentPanel({ civilization, agents, allAgents, relationships }) {
         ))}
       </div>
     </section>
-  );
-}
-
-function Stat({ icon: Icon, label, value }) {
-  return (
-    <div className="civ-stat">
-      <Icon size={15} />
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
   );
 }

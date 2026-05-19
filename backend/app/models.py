@@ -16,6 +16,7 @@ Goal = Literal[
     "collapse",
     "evolve_culture",
     "negotiate",
+    "patrol",
     "rest",
 ]
 
@@ -95,6 +96,10 @@ class Civilization:
     technology: int
     faith: int
     current_strategy: str = "expand"
+    kills: int = 0
+    deaths: int = 0
+    recent_deaths: int = 0
+    status: Literal["alive", "collapsed"] = "alive"
     memories: list[Memory] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -111,6 +116,11 @@ class Civilization:
             "technology": self.technology,
             "faith": self.faith,
             "current_strategy": self.current_strategy,
+            "kills": self.kills,
+            "deaths": self.deaths,
+            "recent_deaths": self.recent_deaths,
+            "status": self.status,
+            "alive": self.status == "alive",
             "memories": [memory.to_dict() for memory in self.memories[-8:]],
         }
 
@@ -134,7 +144,7 @@ class Event:
 class ReasoningLog:
     id: str
     agent_id: str
-    source: Literal["rules", "fallback", "ollama"]
+    source: Literal["rules", "fallback", "ollama", "jac"]
     prompt_context: str
     output_summary: str
     action_taken: str
@@ -156,7 +166,12 @@ class World:
     terrain: list[dict] = field(default_factory=list)
     cities: list[dict] = field(default_factory=list)
     effects: list[dict] = field(default_factory=list)
+    orders: list[dict] = field(default_factory=list)
     news: list[dict] = field(default_factory=list)
     events: list[Event] = field(default_factory=list)
     reasoning_logs: list[ReasoningLog] = field(default_factory=list)
+    jac_traces: list[dict] = field(default_factory=list)
+    deaths: int = 0
+    kills: int = 0
+    last_casualties: int = 0
     paused: bool = False

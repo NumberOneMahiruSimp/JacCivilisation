@@ -3,8 +3,10 @@ import {
   Biohazard,
   Brain,
   CloudLightning,
+  Crown,
   FastForward,
   Flame,
+  Info,
   Landmark,
   Pause,
   Play,
@@ -18,6 +20,7 @@ import {
 import { AgentPanel } from "./components/AgentPanel.jsx";
 import { AllianceGraph } from "./components/AllianceGraph.jsx";
 import { EventTimeline } from "./components/EventTimeline.jsx";
+import { JacTracePanel } from "./components/JacTracePanel.jsx";
 import { ReasoningLog } from "./components/ReasoningLog.jsx";
 import { WorldMap } from "./components/WorldMap.jsx";
 import { apiRequest, createDemoState } from "./lib/api.js";
@@ -44,9 +47,15 @@ export default function App() {
   const [status, setStatus] = useState("Demo state loaded");
   const [speed, setSpeed] = useState(1);
   const [cinematic, setCinematic] = useState(null);
+  const [command, setCommand] = useState("");
+  const [commandStatus, setCommandStatus] = useState("");
+  const [showAbout, setShowAbout] = useState(false);
 
   const selectedCiv = useMemo(
-    () => state.civilizations?.find((civ) => civ.id === selectedCivId) ?? state.civilizations?.[0],
+    () => {
+      const alive = state.civilizations?.filter((civ) => civ.status !== "collapsed" && civ.population > 0) ?? [];
+      return alive.find((civ) => civ.id === selectedCivId) ?? alive[0] ?? state.civilizations?.[0];
+    },
     [selectedCivId, state.civilizations]
   );
 
@@ -112,6 +121,21 @@ export default function App() {
     });
   };
 
+  const submitCommand = (event) => {
+    event.preventDefault();
+    const text = command.trim();
+    if (!text) return;
+    setCommand("");
+    return runAction(`Command: ${text}`, async () => {
+      const result = await apiRequest("/commands", {
+        method: "POST",
+        body: JSON.stringify({ text }),
+      });
+      setCommandStatus(result.message ?? "Command understood -> Jac walker triggered -> World updated");
+      return result.state;
+    });
+  };
+
   const restart = () =>
     runAction("World restarted", () =>
       apiRequest("/simulation/start", {
@@ -121,6 +145,9 @@ export default function App() {
     );
 
   const latestNews = state.news?.slice(-4).reverse() ?? [];
+  const activeOrders = (state.orders ?? []).slice(-3);
+  const latestTrace = (state.jac_traces ?? []).slice(-1)[0];
+  const aliveCount = state.metrics?.alive_civilizations ?? state.civilizations?.filter((civ) => civ.status !== "collapsed").length ?? 0;
 
   return (
     <main className={`god-shell cinematic-${cinematic ?? "idle"}`}>
@@ -128,7 +155,10 @@ export default function App() {
 
       <aside className="left-rail">
         <div className="brand-lockup">
-          <Sparkles size={22} />
+          <div className="logo-mark" aria-hidden="true">
+            <Crown size={17} />
+            <b>JC</b>
+          </div>
           <div>
             <strong>Jac Civilization</strong>
             <span>God Mode</span>
@@ -145,6 +175,21 @@ export default function App() {
               </button>
             ))}
           </div>
+        </section>
+
+        <section className="rail-section command-section">
+          <div className="section-title">Command</div>
+          <form className="command-form" onSubmit={submitCommand}>
+            <input
+              value={command}
+              onChange={(event) => setCommand(event.target.value)}
+              placeholder="Varku attack Khepri"
+              aria-label="World command"
+            />
+            <button type="submit">Issue</button>
+          </form>
+          {commandStatus && <p className="command-status">{commandStatus}</p>}
+          <p className="command-help">Try: Khepri ally Solarians / meteor desert / give Solarians tech boost</p>
         </section>
 
         <section className="rail-section">
@@ -190,39 +235,100 @@ export default function App() {
           </div>
           <div className="live-pill">
             <span className={apiOnline ? "online" : ""} />
-            {apiOnline ? "Actual live backend" : "Preset fallback"}
+            {apiOnline && state.jac_runtime?.enabled ? "Live Jac backend" : apiOnline ? "Actual live backend" : "Preset fallback"}
           </div>
+          <button className="about-jac-button" onClick={() => setShowAbout(true)}>
+            <Info size={14} />
+            About Jac
+          </button>
         </header>
 
         <WorldMap state={state} selectedCivId={selectedCiv?.id} onSelectCiv={setSelectedCivId} />
 
-        <div className="timeline-strip">
-          {(state.events ?? []).slice(-8).map((event) => (
-            <button key={event.id} className={`timeline-node ${event.type}`}>
-              <span>{event.type.replaceAll("_", " ")}</span>
-              <small>t{event.created_tick}</small>
-            </button>
-          ))}
+        <div className="world-intel-console">
+          <div className="world-dossier">
+            <article>
+              <span>World Condition</span>
+              <strong>{aliveCount} civilizations alive</strong>
+              <p>{(state.metrics?.deaths ?? 0).toLocaleString()} total deaths / {(state.metrics?.kills ?? 0).toLocaleString()} combat kills / {state.effects?.length ?? 0} active effects</p>
+            </article>
+            <article>
+              <span>Selected Faction</span>
+              <strong>{selectedCiv?.name ?? "No faction"}</strong>
+              {selectedCiv ? (
+                <div className="faction-mini-stats">
+                  <b>Pop {selectedCiv.population.toLocaleString()}</b>
+                  <b>Stability {selectedCiv.stability}%</b>
+                  <b>Kills {(selectedCiv.kills ?? 0).toLocaleString()}</b>
+                  <b>Deaths {(selectedCiv.deaths ?? 0).toLocaleString()}</b>
+                  <b>Tech {selectedCiv.technology}</b>
+                  <b>Recent {selectedCiv.recent_deaths ?? 0}</b>
+                </div>
+              ) : (
+                <p>Select a faction on the map.</p>
+              )}
+            </article>
+            <article>
+              <span>Active Orders</span>
+              <strong>{activeOrders.length ? activeOrders.map((order) => order.type).join(", ") : "No active routes"}</strong>
+              <p>{activeOrders[0] ? `${activeOrders[0].source} -> ${activeOrders[0].target} / ${activeOrders[0].progress ?? 0}% progress` : "Wars, alliances, and trade routes will appear here."}</p>
+            </article>
+            <article>
+              <span>Latest Jac Decision</span>
+              <strong>{latestTrace ? `${latestTrace.civilization}: ${latestTrace.decision}` : "Awaiting walker"}</strong>
+              <p>{latestTrace?.reason ?? "Tick the world or issue a command to see live agent reasoning."}</p>
+            </article>
+          </div>
+          <JacTracePanel traces={state.jac_traces ?? []} />
         </div>
       </section>
 
       <aside className="right-rail">
         <AgentPanel civilization={selectedCiv} agents={selectedAgents} allAgents={state.agents} relationships={state.relationships} />
         <ReasoningLog logs={state.reasoning_logs ?? []} agents={state.agents} />
-        <AllianceGraph agents={state.agents} relationships={state.relationships} selectedFaction={selectedCiv?.name} />
+        <AllianceGraph agents={state.agents} relationships={state.relationships} selectedFaction={selectedCiv?.name} civilizations={state.civilizations ?? []} metrics={state.metrics ?? {}} />
       </aside>
 
       <section className="bottom-console">
         <EventTimeline events={state.events ?? []} />
-        <div className="news-ticker" aria-label="Live world ticker">
-          <span>LIVE CHRONICLE</span>
-          <div>
-            {(latestNews.length ? latestNews : [{ id: "seed-news", headline: "The world waits for a god's command.", body: status }]).map((item) => (
-              <p key={item.id}>{item.headline} / {item.body}</p>
-            ))}
+        <div className="news-ticker chronicle-board" aria-label="Live world ticker">
+          <header>
+            <span>Chronicle</span>
+            <small>Tick {state.tick}</small>
+          </header>
+          <article className="chronicle-feature">
+            <b>{(latestNews[0]?.headline ?? "The world waits for a god's command.")}</b>
+            <p>{latestNews[0]?.body ?? status}</p>
+          </article>
+          <div className="chronicle-ribbon" aria-hidden="true">
+            <div>
+              {(latestNews.length ? [...latestNews, ...latestNews] : [{ id: "seed-news", headline: "The world waits for a god's command.", body: status }]).map((item, index) => (
+                <p key={`${item.id}-${index}`}>
+                  <strong>Tick {item.tick ?? state.tick}</strong>
+                  {item.headline}
+                </p>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
+      {showAbout && (
+        <div className="about-backdrop" role="dialog" aria-modal="true" aria-label="How Jac is used">
+          <section className="about-modal">
+            <header>
+              <h2>How Jac Powers This World</h2>
+              <button onClick={() => setShowAbout(false)}>Close</button>
+            </header>
+            <p>
+              Jac powers the agentic civilization logic. Each civilization is represented as an agent node. Jac walkers evaluate world state, memory, personality, threats, and resources, then choose actions. React only visualizes the simulation, and FastAPI connects the frontend with the Jac-powered backend.
+            </p>
+            <div className="architecture-line">
+              {"React Frontend -> FastAPI Backend -> Jac Agent Engine -> Civilization Decisions -> World State Update -> Live Map Visualization"}
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
@@ -242,8 +348,11 @@ function CinematicOverlay({ type }) {
   }[type] ?? ["WORLD EVENT", "Civilizations are adapting."];
 
   return (
-    <div className="cinematic-overlay">
+    <div className={`cinematic-overlay ${type}`}>
       <div className="impact-ring" />
+      <div className="cinematic-pixels" aria-hidden="true">
+        {Array.from({ length: 18 }, (_, index) => <i key={index} style={{ "--p": index }} />)}
+      </div>
       <Flame className="impact-icon" size={60} />
       <h2>{copy[0]}</h2>
       <p>{copy[1]}</p>

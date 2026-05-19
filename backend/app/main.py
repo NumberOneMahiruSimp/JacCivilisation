@@ -39,6 +39,10 @@ class WorldEventRequest(BaseModel):
     radius: int = Field(default=3, ge=1, le=8)
 
 
+class CommandRequest(BaseModel):
+    text: str = Field(min_length=2, max_length=240)
+
+
 @app.get("/")
 def root() -> dict:
     return {"name": "Jac Agent Civilization Simulator", "status": "ready"}
@@ -92,6 +96,16 @@ def trigger_event(request: DisasterRequest) -> dict:
 @app.post("/events/god")
 def trigger_god_event(request: WorldEventRequest) -> dict:
     return runtime.trigger_world_event(request.type, request.x, request.y, request.radius).to_dict()
+
+
+@app.post("/commands")
+def issue_command(request: CommandRequest) -> dict:
+    return runtime.apply_command(request.text)
+
+
+@app.post("/demo/run")
+def run_demo_mode() -> dict:
+    return runtime.run_demo_mode()
 
 
 @app.get("/reasoning/logs")

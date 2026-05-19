@@ -32,6 +32,11 @@ export function createDemoState() {
     stability: 72 - index * 3,
     technology: 42 + index * 8,
     faith: 36 + index * 9,
+    kills: index === 1 ? 34 : 0,
+    deaths: index * 7,
+    recent_deaths: index === 2 ? 4 : 0,
+    status: "alive",
+    alive: true,
     current_strategy: ["invent_vaccine", "invade_for_medicine", "negotiate_aid", "migrate", "quarantine"][index],
     memories: [
       {
@@ -117,6 +122,19 @@ export function createDemoState() {
         created_tick: 85,
       },
     ],
+    jac_traces: [
+      {
+        id: "trace-demo-1",
+        tick: 88,
+        walker: "decide_strategy",
+        civilization: "Varku",
+        inputs: { population: 1020, stability: 69, deaths: 7, nearby_enemy: "Elyrians", threat_level: 72 },
+        decision: "ATTACK",
+        reason: "Varku chose ATTACK because enemy stability is weak and military aggression is high.",
+      },
+    ],
+    jac_runtime: { enabled: false, file: "demo", last_error: null },
+    metrics: { deaths: 70, kills: 34, last_casualties: 4, alive_civilizations: 5, collapsed_civilizations: 0 },
   };
 }
 

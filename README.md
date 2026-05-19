@@ -1,38 +1,152 @@
-# Jac Agent Civilization Simulator
+# Jac Civilization God Mode
 
-Local-first hackathon MVP for a civilization of autonomous agents. The backend runs deterministic simulation ticks and calls Ollama only for selected diplomacy/strategy moments. The frontend renders the live world, agent memory, relationships, reasoning logs, and disaster timeline.
+Jac Civilization God Mode is a living civilization sandbox powered by Jac. Five factions share a pixel-art world map, react to disasters, form alliances, trade, fight wars, migrate, collapse, and explain their decisions as the simulation runs.
 
-## Run Backend
+This is not a static dashboard. The map moves, routes update, units march, disasters spread, population changes, and Jac agent traces show why each civilization chose its next action.
+
+## What You Can Do
+
+- Trigger world events like war, plague, meteor strikes, resource booms, climate collapse, alien contact, AI uprising, religion, and nuclear strikes.
+- Type natural commands such as `Varku attack Khepri`, `Khepri ally Solarians`, or `give Solarians tech boost`.
+- Watch red war arrows, green alliance/trade lines, moving order circles, disaster rings, refugee movement, and faction units.
+- Select a civilization and inspect population, stability, kills, deaths, technology, memory, and current strategy.
+- Read the live Jac Agent Trace to see the walker, inputs, decision, and reasoning behind civilization behavior.
+
+## How Jac Is Used
+
+Jac is the decision engine for the simulation.
+
+`backend/simulation.jac` evaluates each civilization's state, including:
+
+- population
+- stability
+- deaths and recent losses
+- nearby enemies
+- active disasters
+- trade routes
+- faction traits
+- world pressure
+
+Jac returns decisions such as:
+
+- attack
+- ally
+- trade
+- fortify
+- migrate
+- recover
+- research
+- adapt
+- declare ceasefire
+
+FastAPI calls the Jac engine, applies the decision to the world state, and React visualizes the result.
+
+## Architecture
+
+```text
+React frontend
+  -> FastAPI backend
+  -> Jac agent engine
+  -> civilization decisions
+  -> world state update
+  -> live map visualization
+```
+
+## Factions
+
+- Solarians: technological empire focused on invention.
+- Varku: militaristic faction built around conquest.
+- Elyrians: diplomatic kingdom that prefers treaties.
+- Nomads: adaptive migrants who survive through movement.
+- Khepri: religious civilization guided by faith and memory.
+
+## Map Legend
+
+- Red arrow: active war or invasion.
+- Green line: alliance or trade route.
+- Gold dashed line: diplomatic tension.
+- Moving circle: order progress.
+- Pulsing circle: disaster or crisis zone.
+
+## Example Commands
+
+```text
+Varku attack Khepri
+Khepri ally Solarians
+Solarians trade with Khepri
+plague Varku
+meteor desert
+nuclear strike Khepri
+ceasefire Varku Khepri
+make Khepri migrate north
+give Solarians tech boost
+```
+
+## Run Locally
+
+Install backend dependencies:
 
 ```powershell
 cd D:\Games\CIVILIZATION
 pip install -r backend\requirements.txt
+```
+
+Start the backend:
+
+```powershell
 $env:PYTHONPATH="D:\Games\CIVILIZATION\backend"
 uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8001
 ```
 
-## Run Frontend
+Install frontend dependencies:
 
 ```powershell
 cd D:\Games\CIVILIZATION\frontend
 npm install
+```
+
+Start the frontend:
+
+```powershell
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`.
+Open:
 
-## Test
+```text
+http://127.0.0.1:5173
+```
+
+## Verification
 
 ```powershell
 cd D:\Games\CIVILIZATION
 $env:PYTHONPATH="D:\Games\CIVILIZATION\backend"
+python -m jaclang check --parse_only backend\simulation.jac
 python -m pytest backend\tests -q
 cd frontend
 npm run build
 ```
 
-## Notes
+## Project Structure
 
-- If Ollama is running at `http://localhost:11434`, diplomacy events can use the configured local model.
-- If Ollama is unavailable, the simulator records a fallback reasoning log and continues.
-- Normal movement, hunger, resource collection, trade, memory, and disaster response are rule-based.
+```text
+backend/
+  app/
+    jac_engine.py      # Python bridge that calls Jac
+    main.py            # FastAPI routes
+    simulation.py      # world-state application layer
+  simulation.jac       # agentic civilization decision logic
+  tests/
+
+frontend/
+  src/
+    App.jsx
+    components/
+    styles.css
+  public/assets/
+```
+
+## Why It Matters
+
+The interesting part is not just that disasters happen. It is that civilizations remember, reason, and respond differently. A plague may make one faction research, another migrate, another fortify, and another attack for medicine. The frontend shows the story, but Jac is where the strategic decisions are made.

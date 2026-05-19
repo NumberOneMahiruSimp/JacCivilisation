@@ -49,3 +49,25 @@ def test_trigger_god_event_returns_live_cinematic_state():
     state = client.get("/simulation/state").json()
     assert any(effect["type"] == "meteor_crater" for effect in state["effects"])
     assert any("Meteor" in item["headline"] for item in state["news"])
+
+
+def test_text_command_creates_war_order():
+    client.post("/simulation/start", json={"agent_count": 10, "seed": 22})
+    command = client.post("/commands", json={"text": "Varku attack Elyrians"})
+
+    assert command.status_code == 200
+    payload = command.json()
+    assert payload["type"] == "war_order"
+    state = payload["state"]
+    assert any(order["type"] == "war" and order["source"] == "Varku" and order["target"] == "Elyrians" for order in state["orders"])
+    assert any(agent["faction"] == "Varku" and agent["goal"] == "invade" for agent in state["agents"])
+
+
+def test_demo_mode_returns_jac_trace_and_orders():
+    client.post("/simulation/start", json={"agent_count": 10, "seed": 32})
+    response = client.post("/demo/run")
+
+    assert response.status_code == 200
+    state = response.json()
+    assert state["jac_traces"]
+    assert any(order["type"] in {"war", "alliance", "trade"} for order in state["orders"])
