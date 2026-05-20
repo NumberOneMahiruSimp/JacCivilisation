@@ -4,6 +4,37 @@ Jac Civilization God Mode is a living civilization sandbox powered by Jac. Five 
 
 This is not a static dashboard. The map moves, routes update, units march, disasters spread, population changes, and Jac agent traces show why each civilization chose its next action.
 
+> **Hosted demo note:** The public Render deployment may take a few seconds to respond to the first command. The backend runs the live simulation and Jac decision pass on demand, and free hosted instances can briefly cold start after inactivity. After the service wakes up, commands process normally.
+
+## Live Demo
+
+Open the deployed version here:
+
+```text
+https://jac-civilization.onrender.com/
+```
+
+## Visual Preview
+
+### Living World Map
+
+![Pixel civilization world map](frontend/public/assets/reference-world-map.png)
+
+### Civilization Leaders
+
+<p>
+  <img src="frontend/public/assets/leader-blonde.png" alt="Civilization leader preview" width="180" />
+  <img src="frontend/public/assets/leader-boy.png" alt="Civilization commander preview" width="180" />
+</p>
+
+### Pixel Unit Assets
+
+<p>
+  <img src="frontend/public/assets/players/region-gold.png" alt="Golden faction unit" width="160" />
+  <img src="frontend/public/assets/players/region-iron.png" alt="Iron faction unit" width="160" />
+  <img src="frontend/public/assets/players/1779180757429.png" alt="Mystic faction unit" width="160" />
+</p>
+
 ## What You Can Do
 
 - Trigger world events like war, plague, meteor strikes, resource booms, climate collapse, alien contact, AI uprising, religion, and nuclear strikes.
