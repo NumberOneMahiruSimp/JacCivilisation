@@ -14,6 +14,53 @@ Open the deployed version here:
 https://jac-civilization.onrender.com/
 ```
 
+## Hackathon Judge Notes: Where Jac Is Used
+
+Jac is not just mentioned in the branding. It is part of the live decision loop.
+
+The core Jac file is:
+
+```text
+backend/simulation.jac
+```
+
+That file contains the agentic strategy logic for civilizations and agents. It evaluates live world state and returns structured decisions with explanations.
+
+The Python bridge is:
+
+```text
+backend/app/jac_engine.py
+```
+
+FastAPI calls this bridge during simulation ticks, event reactions, and command execution. The bridge runs the Jac program and returns decisions to the Python simulation layer.
+
+The world-state application layer is:
+
+```text
+backend/app/simulation.py
+```
+
+This file applies Jac decisions to the actual world. For example, when Jac chooses `attack`, `ally`, `trade`, `fortify`, `migrate`, `recover`, `research`, or `declare_ceasefire`, the backend updates population, stability, relationships, routes, memory, and active orders.
+
+The visible proof in the UI is the **Jac Agent Trace** panel. It shows:
+
+- the Jac walker name
+- the civilization being evaluated
+- input values such as population, stability, deaths, recent deaths, nearby enemy, threat level, and active events
+- the decision returned by Jac
+- the human-readable reason for that decision
+
+In short:
+
+```text
+User command or world event
+  -> FastAPI backend
+  -> backend/simulation.jac
+  -> Jac decision returned
+  -> Python updates world state
+  -> React displays map changes and Jac trace
+```
+
 ## Visual Preview
 
 ### Living World Map
