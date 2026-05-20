@@ -14,7 +14,7 @@ Open the deployed version here:
 https://jac-civilization.onrender.com/
 ```
 
-## Hackathon Judge Notes: Where Jac Is Used
+## Where Jac Is Used
 
 Jac is not just mentioned in the branding. It is part of the live decision loop.
 
@@ -42,7 +42,7 @@ backend/app/simulation.py
 
 This file applies Jac decisions to the actual world. For example, when Jac chooses `attack`, `ally`, `trade`, `fortify`, `migrate`, `recover`, `research`, or `declare_ceasefire`, the backend updates population, stability, relationships, routes, memory, and active orders.
 
-The visible proof in the UI is the **Jac Agent Trace** panel. It shows:
+The live UI includes a **Jac Agent Trace** panel. It shows:
 
 - the Jac walker name
 - the civilization being evaluated
